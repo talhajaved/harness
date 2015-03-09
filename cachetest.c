@@ -129,7 +129,7 @@ void putToEnd(int indexTemp) {
   for (x=indexTemp; x<CACHESIZE-1; x++) {
 
     orderArray[x] = orderArray[x+1];
-    printf("Array[%d]: %d\n",x,orderArray[x]);
+    printf("Array[%d]: %d\t",x,orderArray[x]);
   }
   orderArray[CACHESIZE-1] = indexTemp;
   printf("Array[%d]: %d\n",x,orderArray[x]);
