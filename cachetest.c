@@ -124,13 +124,12 @@ static int orderArray[CACHESIZE];
 
 void cacheinit() {
   smutex_init(&orderMutex);
-
+  int x;
   for ( x = 0; x < CACHESIZE; x++ ) {
     smutex_init(&cache[x].mutex);
     cache[x].dirty = false;
     cache[x].blocknum = INVALID;
   }
-  int x;
   for (x=0; x<CACHESIZE; x++) {
     orderArray[x] = x;
   }
@@ -141,6 +140,7 @@ void readblock(char *block, int blocknum) {
   int cacheFound = -1;
   int indexToReplace = 0;
 
+  int x;
   for ( x = 0; x < CACHESIZE; x++ ) {
     if (cache[x].blocknum == blocknum) {
       cacheFound = x;
@@ -182,6 +182,7 @@ void writeblock(char *block, int blocknum) {
   int cacheFound = -1;
   int indexToReplace = 0;
 
+  int x;
   for ( x = 0; x < CACHESIZE; x++ ) {
     if (cache[x].blocknum == blocknum) {
       cacheFound = x;
