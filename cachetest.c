@@ -121,6 +121,17 @@ static smutex_t orderMutex;
 static struct blockcache cache[CACHESIZE];
 static int orderArray[CACHESIZE];
 
+void putToEnd(int indexTemp) {
+  // int indexToThrow = -1;
+  smutex_lock(&orderMutex);
+  int x;
+  for (x=indexTemp; x<CACHESIZE-1; x++) {
+    orderArray[x] = orderArray[x+1];
+  }
+  orderArray[9] = indexTemp;
+  smutex_unlock(&orderMutex);
+}
+
 
 void cacheinit() {
   smutex_init(&orderMutex);
@@ -151,7 +162,7 @@ void readblock(char *block, int blocknum) {
   if (cacheFound == -1) {
     indexToReplace = orderArray[0];
 
-    smutex_lock(&cachne[indexToReplace].mutex);
+    smutex_lock(&cache[indexToReplace].mutex);
     if (cache[indexToReplace].dirty) { /* we have to write back the cached block */
        dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
     }
@@ -166,7 +177,7 @@ void readblock(char *block, int blocknum) {
   else {
     
     indexToReplace = cacheFound;
-    smutex_lock(&cachne[indexToReplace].mutex);
+    smutex_lock(&cache[indexToReplace].mutex);
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); 
     smutex_unlock(&cache[indexToReplace].mutex);
 
@@ -193,7 +204,7 @@ void writeblock(char *block, int blocknum) {
   if (cacheFound == -1) {
     indexToReplace = orderArray[0];
 
-    smutex_lock(&cachne[indexToReplace].mutex);
+    smutex_lock(&cache[indexToReplace].mutex);
     if (cache[indexToReplace].dirty) { /* we have to write back the cached block */
        dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
     }
@@ -210,7 +221,7 @@ void writeblock(char *block, int blocknum) {
 
     
     indexToReplace = cacheFound;
-    smutex_lock(&cachne[indexToReplace].mutex);
+    smutex_lock(&cache[indexToReplace].mutex);
     cache[indexToReplace].blocknum = blocknum;
     cache[indexToReplace].dirty = true;
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); 
@@ -223,14 +234,5 @@ void writeblock(char *block, int blocknum) {
 
 }
 
-void putToEnd(int indexTemp) {
-  // int indexToThrow = -1;
-  smutex_lock(&orderMutex);
-  int x;
-  for (x=indexTemp; x<CACHESIZE-1; x++) {
-    orderArray[x] = orderArray[x+1];
-  }
-  orderArray[9] = indexTemp;
-  smutex_unlock(&orderMutex);
-}
+
 
