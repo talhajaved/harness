@@ -107,7 +107,7 @@ void dblockwrite(char *block, int blocknum) {
  */
 
 #define INVALID -1	// cache starts empty
-#define CACHESIZE 10 // cache size
+#define CACHESIZE 4 // cache size
 
 struct blockcache {
   smutex_t mutex;
@@ -123,7 +123,7 @@ static int orderArray[CACHESIZE];
 
 void putToEnd(int indexTemp) {
   // int indexToThrow = -1;
-  printf("Put it to end: %d",indexTemp);
+  printf("Put it to end: %d\n",indexTemp);
   smutex_lock(&orderMutex);
   int x;
   for (x=indexTemp; x<CACHESIZE-1; x++) {
