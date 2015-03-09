@@ -107,44 +107,129 @@ void dblockwrite(char *block, int blocknum) {
  */
 
 #define INVALID -1	// cache starts empty
+#define CACHESIZE 10 // cache size
 
 struct blockcache {
+  smutex_t mutex;
   int blocknum;		// blocknumber of the current block in the cache
   bool dirty;		// whether the block is dirty
   char block[BLOCKSIZE]; // storage for the block of data
 };
 
 /* mutual exclusion */
-static smutex_t mutex;
-static struct blockcache cache;
+static smutex_t orderMutex;
+static struct blockcache cache[CACHESIZE];
+static int orderArray[CACHESIZE];
+
 
 void cacheinit() {
-  smutex_init(&mutex);
-  cache.dirty = false;
-  cache.blocknum = INVALID; 
+  smutex_init(&orderMutex);
+
+  for ( x = 0; x < CACHESIZE; x++ ) {
+    smutex_init(&cache[x].mutex);
+    cache[x].dirty = false;
+    cache[x].blocknum = INVALID;
+  }
+  int x;
+  for (x=0; x<CACHESIZE; x++) {
+    orderArray[x] = x;
+  }
+
 }
 
 void readblock(char *block, int blocknum) {
-  smutex_lock(&mutex);
-  if (cache.blocknum != blocknum) {
-     if (cache.dirty) { /* we have to write back the cached block */
-        dblockwrite(cache.block, cache.blocknum);
-     }
-     dblockread(cache.block, blocknum);
-     cache.dirty = false;
-  } /* otherwise its already here! */
-  memcpy(block, cache.block, BLOCKSIZE); 
-  smutex_unlock(&mutex);
+  int cacheFound = -1;
+  int indexToReplace = 0;
+
+  for ( x = 0; x < CACHESIZE; x++ ) {
+    if (cache[x].blocknum == blocknum) {
+      cacheFound = x;
+      break;
+    }
+  }
+
+  if (cacheFound == -1) {
+    indexToReplace = orderArray[0];
+
+    smutex_lock(&cachne[indexToReplace].mutex);
+    if (cache[indexToReplace].dirty) { /* we have to write back the cached block */
+       dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
+    }
+    dblockread(cache[indexToReplace].block, blocknum);
+    cache[indexToReplace].dirty = false;
+    memcpy(block, cache[indexToReplace].block, BLOCKSIZE); 
+    smutex_unlock(&cache[indexToReplace].mutex);
+
+    // update the orderArray
+    putToEnd(indexToReplace);
+  }
+  else {
+    
+    indexToReplace = cacheFound;
+    smutex_lock(&cachne[indexToReplace].mutex);
+    memcpy(block, cache[indexToReplace].block, BLOCKSIZE); 
+    smutex_unlock(&cache[indexToReplace].mutex);
+
+    // update the orderArray
+    putToEnd(indexToReplace);
+
+  }
+
 }
 
 void writeblock(char *block, int blocknum) {
-  smutex_lock(&mutex);
-  if (cache.dirty && cache.blocknum != blocknum) {
-    dblockwrite(cache.block, cache.blocknum); /* we have to write it back */
+
+  int cacheFound = -1;
+  int indexToReplace = 0;
+
+  for ( x = 0; x < CACHESIZE; x++ ) {
+    if (cache[x].blocknum == blocknum) {
+      cacheFound = x;
+      break;
+    }
   }
-  cache.blocknum = blocknum;
-  cache.dirty = true;
-  memcpy(cache.block, block, BLOCKSIZE); 
-  smutex_unlock(&mutex);
+
+  if (cacheFound == -1) {
+    indexToReplace = orderArray[0];
+
+    smutex_lock(&cachne[indexToReplace].mutex);
+    if (cache[indexToReplace].dirty) { /* we have to write back the cached block */
+       dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
+    }
+
+    cache[indexToReplace].blocknum = blocknum;
+    cache[indexToReplace].dirty = true;
+    memcpy(cache[indexToReplace].block, block, BLOCKSIZE); 
+    smutex_unlock(&cache[indexToReplace].mutex);
+
+    // update the orderArray
+    putToEnd(indexToReplace);
+  }
+  else {
+
+    
+    indexToReplace = cacheFound;
+    smutex_lock(&cachne[indexToReplace].mutex);
+    cache[indexToReplace].blocknum = blocknum;
+    cache[indexToReplace].dirty = true;
+    memcpy(cache[indexToReplace].block, block, BLOCKSIZE); 
+    smutex_unlock(&cache[indexToReplace].mutex);
+
+    // update the orderArray
+    putToEnd(indexToReplace);
+
+  }
+
+}
+
+void putToEnd(int indexTemp) {
+  // int indexToThrow = -1;
+  smutex_lock(&orderMutex);
+  int x;
+  for (x=indexTemp; x<CACHESIZE-1; x++) {
+    orderArray[x] = orderArray[x+1];
+  }
+  orderArray[9] = indexTemp;
+  smutex_unlock(&orderMutex);
 }
 
