@@ -144,6 +144,11 @@ void putToEnd(int indexTemp) {
   //   printf("Array[%d]: %d\t",x,orderArray[x]);
   // }
   // printf("\n");
+
+  for (x=0; x<CACHESIZE; x++) {
+     printf("Cache[%d]: %d\t",x,cache[x]);
+   }
+   printf("\n");
   smutex_unlock(&orderMutex);
   
 }
