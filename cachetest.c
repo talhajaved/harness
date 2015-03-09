@@ -126,7 +126,15 @@ void putToEnd(int indexTemp) {
   printf("Put it to end: %d\n",indexTemp);
   smutex_lock(&orderMutex);
   int x;
-  for (x=indexTemp; x<CACHESIZE-1; x++) {
+  int startPosition=0;
+
+  for (x=0; x<CACHESIZE; x++) {
+    if(orderArray[x] == indexTemp) {
+      startPosition = x;
+    }
+  }
+
+  for (x=startPosition; x<CACHESIZE-1; x++) {
 
     orderArray[x] = orderArray[x+1];
     printf("Array[%d]: %d\t",x,orderArray[x]);
