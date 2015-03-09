@@ -123,7 +123,7 @@ static int orderArray[CACHESIZE];
 
 void putToEnd(int indexTemp) {
   // int indexToThrow = -1;
-  printf("Put it to end: %d\n",indexTemp);
+  printf("Use: %d\n",indexTemp);
   smutex_lock(&orderMutex);
   int x;
   int startPosition=0;
@@ -140,10 +140,10 @@ void putToEnd(int indexTemp) {
   orderArray[CACHESIZE-1] = indexTemp;
   
 
-  for (x=0; x<CACHESIZE; x++) {
-    printf("Array[%d]: %d\t",x,orderArray[x]);
-  }
-  printf("Next\n");
+  // for (x=0; x<CACHESIZE; x++) {
+  //   printf("Array[%d]: %d\t",x,orderArray[x]);
+  // }
+  // printf("\n");
   smutex_unlock(&orderMutex);
   
 }
