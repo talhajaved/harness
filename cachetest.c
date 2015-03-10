@@ -58,9 +58,10 @@ int randomblock() {
 
   for (;;) {
     candidate = rand() % NBLOCKS;
-    if ((double) rand()/RAND_MAX < (double) 1/(candidate + 1))
-        return candidate;
+    if ((double) rand()/RAND_MAX < (double) 1/(candidate + 1)) {
+      return candidate;
     }
+  }
 }
 
 /* read/write 100 blocks, randomly distributed */
@@ -113,12 +114,12 @@ int main(int argc, char **argv)
   }
 
   /* start the testers */
-  for(i = 0; i < NTHREADS; i++){
+  for(i = 0; i < NTHREADS; i++) {
     sthread_create(&(testers[i]), &tester, i);
   }
 
   /* wait for everyone to finish */
-  for(i = 0; i < NTHREADS; i++){
+  for(i = 0; i < NTHREADS; i++) {
     ret = sthread_join(testers[i]);
   }
 
@@ -148,41 +149,37 @@ void dblockwrite(char *block, int blocknum) {
 void putToEnd(int indexTemp) {
   // indexTemp is the index in orderArray that needs to be put to end of it
   // notice that indexTemp refers to *contents* of orderArray, not its indices
-  
-  //smutex_lock(&orderMutex); // lock the orderArray
+
+  int i;  
   int startPosition = 0; // from which place up do we reshuffle
 
-  int i;
   for (i = 0; i < CACHESIZE; i++) { // look through the orderArray
     if (orderArray[i] == indexTemp) { // find indexTemp in orderArray
       startPosition = i; // this is the first place to reshuffle
     }
   }
 
-  int j;
-  for (j = startPosition; j < (CACHESIZE-1); j++) { // reshuffling
-    orderArray[j] = orderArray[j+1]; // move things up
+  for (i = startPosition; i < (CACHESIZE-1); i++) { // reshuffling
+    orderArray[i] = orderArray[i+1]; // move things up
   }
   orderArray[CACHESIZE-1] = indexTemp; // put indexTemp at the end
-
-  //smutex_unlock(&orderMutex); // unlock orderArray
 }
 
 // Initializes the cache
 void cacheinit() {
   smutex_init(&orderMutex); // initialize orderArray lock
-  
+
   int i;
+
   for (i = 0; i < CACHESIZE; i++ ) { // initialize all cacheBlocks
     smutex_init(&cache[i].mutex);
     cache[i].dirty = false;
     cache[i].blocknum = INVALID;
   }
   
-  int j;
-  for (j = 0; j < CACHESIZE; j++) { // initialize orderArray with 0-CACHESIZE
+  for (i = 0; i < CACHESIZE; i++) { // initialize orderArray with 0-CACHESIZE
     // needs to be this way because we initially, we allocate stuff in order
-    orderArray[j] = j;
+    orderArray[i] = i;
   }
 }
 
@@ -191,10 +188,10 @@ void readblock(char *block, int blocknum) {
   // block provided by tester
   // blocknum is the number of the block to read
 
-  int cacheFound = -1; // where is the block with correct blocknum in cache
-  int indexToReplace = 0; // which index do we replace?
-
   int i;
+  int cacheFound = -1; // where is the block with correct blocknum in cache
+  int indexToReplace = 0; // which index do we replace?  
+
   smutex_lock(&orderMutex);
   for (i = 0; i < CACHESIZE; i++) {
     if (cache[i].blocknum == blocknum) {
@@ -241,10 +238,10 @@ void writeblock(char *block, int blocknum) {
   // block provided by tester
   // blocknum is the number of the block to read
 
+  int i;
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?
 
-  int i;
   smutex_lock(&orderMutex);
   for (i = 0; i < CACHESIZE; i++) {
     if (cache[i].blocknum == blocknum) {
