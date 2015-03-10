@@ -133,7 +133,7 @@ void putToEnd(int indexTemp) {
   // indexTemp is the index in orderArray that needs to be put to end of it
   // notice that indexTemp refers to *contents* of orderArray, not its indices
   
-  printf("Put to back: %d\t", indexTemp);
+  //printf("Put to back: %d\t", indexTemp);
 
   smutex_lock(&orderMutex); // lock the orderArray
   int startPosition = 0; // from which place up do we reshuffle
@@ -151,11 +151,11 @@ void putToEnd(int indexTemp) {
   }
   orderArray[CACHESIZE-1] = indexTemp; // put indexTemp at the end
   
-  int k;
+  /*int k;
   for (k = 0; k < CACHESIZE; k++) {
     printf("Array[%d]: %d\t", k, orderArray[k]);
   }
-  printf("\n");
+  printf("\n");*/
 
   smutex_unlock(&orderMutex); // unlock orderArray
 }
