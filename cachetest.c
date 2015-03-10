@@ -200,24 +200,31 @@ void readblock(char *block, int blocknum) {
 
   if (cacheFound == -1) { // if we did not find the block in cache
     indexToReplace = orderArray[0]; // replacing cacheBlock[head of orderArray]
-    putToEnd(indexToReplace); // update the orderArray
-
     smutex_lock(&cache[indexToReplace].mutex); // locks the current cacheBlock
+    
+    putToEnd(indexToReplace); // update the orderArray
+    
     if (cache[indexToReplace].dirty) {
       // we have to write back the contents of previously cached block
       dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
     }
+    
     dblockread(cache[indexToReplace].block, blocknum); // read blocknum
     cache[indexToReplace].dirty = false; // cacheBlock is clean now
+    
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
+    
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks current cacheBlock
   }
+
   else { // we found block in cache
     indexToReplace = cacheFound;
-    putToEnd(indexToReplace); // update the orderArray
-
     smutex_lock(&cache[indexToReplace].mutex); // locks the cacheBlock
+    
+    putToEnd(indexToReplace); // update the orderArray
+    
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
+    
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks the cacheBlock
   }
 
@@ -240,26 +247,32 @@ void writeblock(char *block, int blocknum) {
 
   if (cacheFound == -1) { // if we did not find the block in cache
     indexToReplace = orderArray[0]; // replacing cacheBlock[head of orderArray]
-    putToEnd(indexToReplace); // update the orderArray
-
     smutex_lock(&cache[indexToReplace].mutex); // locks the current cacheBlock
+    
+    putToEnd(indexToReplace); // update the orderArray
+    
     if (cache[indexToReplace].dirty) {
       // we have to write back the contents of previously cached block
       dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
     }
+    
     cache[indexToReplace].blocknum = blocknum; // rewrite blocknum
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
+    
     smutex_unlock(&cache[indexToReplace].mutex); // unlock current cacheBlock
   }
+  
   else { // we found block in cache
     indexToReplace = cacheFound;
-    putToEnd(indexToReplace); // update the orderArray
-
     smutex_lock(&cache[indexToReplace].mutex); // locks the cacheBlock
+    
+    putToEnd(indexToReplace); // update the orderArray
+    
     cache[indexToReplace].blocknum = blocknum; // replace cacheBlock's blocknum
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
+    
     smutex_unlock(&cache[indexToReplace].mutex); // unlock the cacheBlock
   }
 }
