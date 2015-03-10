@@ -25,13 +25,34 @@ static void writeblock(char *, int);
 /* the data being stored and fetched */
 static char blockData[NBLOCKS][BLOCKSIZE];
 
+/* cache data */
+#define INVALID -1  // the blocknum of empty cache blocks
+#define CACHESIZE 4 // cache size
+
+struct cacheBlock {
+  // a single block of cache
+  smutex_t mutex; // mutex for this block
+  int blocknum; // blocknumber of this block
+  bool dirty; // whether this block is dirty
+  char block[BLOCKSIZE]; // the actual data of this block
+};
+
+static struct cacheBlock cache[CACHESIZE];
+// the cache is an array of CACHESIZE cacheBlocks
+
+static int orderArray[CACHESIZE];
+// holds indices of blocks in cacheBlock
+// when a block needs to be put in, it replaces block at index at front of this
+// when a block is initialized/reused, its index is put at the end of orderArray
+
+static smutex_t orderMutex;
+// mutex to make sure orderArray reassignment is atomic
+
 /* randomblock 
  * Generate a random block # from 0..NBLOCKS-1, according to a zipf 
  * distribution, using the rejection method.  The C library random() gives
-  * us a uniform distribution, and we discard each option with probability 
-  * 1-1/blocknum
-  */
-
+ * us a uniform distribution, and we discard each option with probability 
+ * 1-1/blocknum */
 int randomblock() {
   int candidate;
 
@@ -81,8 +102,8 @@ int main(int argc, char **argv)
   long ret; 
   sthread_t testers[NTHREADS];
 
-  srand(0);	/* init the workload generator */
-  cacheinit();  /* init the buffer */
+  srand(0); /* init the workload generator */
+  cacheinit(); /* init the buffer */
 
   /* init blocks */
   for (i = 0; i < NBLOCKS; i++) {
@@ -93,11 +114,14 @@ int main(int argc, char **argv)
   for(i = 0; i < NTHREADS; i++){
     sthread_create(&(testers[i]), &tester, i);
   }
-/* wait for everyone to finish */
+
+  /* wait for everyone to finish */
   for(i = 0; i < NTHREADS; i++){
     ret = sthread_join(testers[i]);
   }
+
   printf("Main thread done.\n");
+  
   return ret;
 }
 
@@ -115,29 +139,7 @@ void dblockwrite(char *block, int blocknum) {
   sthread_sleep(0, rand() % 100000); 
 }
 
-/* cache routines */
-
-#define INVALID -1	// the blocknum of empty cache blocks
-#define CACHESIZE 4 // cache size
-
-struct cacheBlock {
-  // a single block of cache
-  smutex_t mutex; // mutex for this block
-  int blocknum; // blocknumber of this block
-  bool dirty; // whether this block is dirty
-  char block[BLOCKSIZE]; // the actual data of this block
-};
-
-static struct cacheBlock cache[CACHESIZE];
-// defining the cache
-// the cache is an array of CACHESIZE cacheBlocks
-
-static int orderArray[CACHESIZE];
-// holds indices of blocks in cacheBlock
-// when a block needs to be put in, it replaces block at index at front of this
-// when a block is initialized/reused, its index is put at the end of orderArray
-static smutex_t orderMutex;
-// mutex to make sure orderArray reassignment is atomic
+/* Cache routines */
 
 // Reshuffles the orderArray
 void putToEnd(int indexTemp) {
