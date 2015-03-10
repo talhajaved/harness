@@ -2,7 +2,7 @@
   * cachetest.c -- Test implementation of multithreaded file cache
   *
   * The disk has NBLOCKS of data; the cache stores many fewer.
-  * Our solution assumes a chae of size CACHESIZE.
+  * Our solution assumes a cache of size CACHESIZE.
   */
 
 #include <stdlib.h>
@@ -54,10 +54,21 @@ void tester(int n)
       *(int *)block = n * NBLOCKS + blocknum;
       writeblock(block, blocknum); /* write the new value */
       printf("Wrote block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
+      int x;
+      for (x = 0; x < CACHESIZE; x++) {
+        printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+      }
+      printf("\n");
     }
+
     else { /* if even, simulate a read */
       readblock(block, blocknum); 
       printf("Read  block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
+      int x;
+      for (x = 0; x < CACHESIZE; x++) {
+        printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+      }
+      printf("\n");
     }
   }
   sthread_exit(100 + n);
@@ -210,12 +221,6 @@ void readblock(char *block, int blocknum) {
     dblockread(cache[indexToReplace].block, blocknum); // read from disk
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
-    
-    int x;
-    for (x = 0; x < CACHESIZE; x++) {
-      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
-    }
-    printf("\n");
 
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks current cacheBlock
   }
@@ -227,12 +232,6 @@ void readblock(char *block, int blocknum) {
     putToEnd(indexToReplace); // update the orderArray
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
-    
-    int x;
-    for (x = 0; x < CACHESIZE; x++) {
-      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
-    }
-    printf("\n");
 
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks the cacheBlock
   }
@@ -268,11 +267,7 @@ void writeblock(char *block, int blocknum) {
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
     
-    int x;
-    for (x = 0; x < CACHESIZE; x++) {
-      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
-    }
-    printf("\n");
+    
 
     smutex_unlock(&cache[indexToReplace].mutex); // unlock current cacheBlock
   }
@@ -286,12 +281,6 @@ void writeblock(char *block, int blocknum) {
     cache[indexToReplace].blocknum = blocknum; // replace cacheBlock's blocknum
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
-    
-    int x;
-    for (x = 0; x < CACHESIZE; x++) {
-      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
-    }
-    printf("\n");
 
     smutex_unlock(&cache[indexToReplace].mutex); // unlock the cacheBlock
   }
