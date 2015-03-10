@@ -133,7 +133,7 @@ void putToEnd(int indexTemp) {
   // indexTemp is the index in orderArray that needs to be put to end of it
   // notice that indexTemp refers to *contents* of orderArray, not its indices
   
-  printf("Using: %d\n", indexTemp);
+  printf("Put to back: %d\t", indexTemp);
 
   smutex_lock(&orderMutex); // lock the orderArray
   int startPosition = 0; // from which place up do we reshuffle
@@ -151,10 +151,10 @@ void putToEnd(int indexTemp) {
   }
   orderArray[CACHESIZE-1] = indexTemp; // put indexTemp at the end
   
-  // for (x=0; x<CACHESIZE; x++) {
-  //   printf("Array[%d]: %d\t",x,orderArray[x]);
-  // }
-  // printf("\n");
+  int x;
+  for (x = 0; x < CACHESIZE; x++) {
+    printf("Array[%d]: %d\t", x, orderArray[x]);
+  }
 
   int k;
   for (k = 0; k < CACHESIZE; k++) {
@@ -262,7 +262,7 @@ void writeblock(char *block, int blocknum) {
     
     smutex_unlock(&cache[indexToReplace].mutex); // unlock current cacheBlock
   }
-  
+
   else { // we found block in cache
     indexToReplace = cacheFound;
     smutex_lock(&cache[indexToReplace].mutex); // locks the cacheBlock
