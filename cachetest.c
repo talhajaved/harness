@@ -27,7 +27,7 @@ static char blockData[NBLOCKS][BLOCKSIZE];
 
 /* cache data */
 #define INVALID -1  // the blocknum of empty cache blocks
-#define CACHESIZE 4 // cache size
+#define CACHESIZE 10 // cache size
 
 struct cacheBlock {
   // a single block of cache
@@ -78,7 +78,7 @@ void tester(int n)
       printf("\tCache: ");
       int x;
       for (x = 0; x < CACHESIZE; x++) {
-        printf("[%d] = #%2d = %3d\t", x, cache[x].blocknum, *(int *)cache[x].block);
+        printf("[%d] = #%2d = %3d\t", orderArray[x], cache[orderArray[x]].blocknum, *(int *)cache[orderArray[x]].block);
       }
       printf("\n");
     }
@@ -89,7 +89,7 @@ void tester(int n)
       printf("\tCache: ");
       int x;
       for (x = 0; x < CACHESIZE; x++) {
-        printf("[%d] = #%2d = %3d\t", x, cache[x].blocknum, *(int *)cache[x].block);
+        printf("[%d] = #%2d = %3d\t", orderArray[x], cache[orderArray[x]].blocknum, *(int *)cache[orderArray[x]].block);
       }
       printf("\n");
     }
