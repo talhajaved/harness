@@ -75,10 +75,10 @@ void tester(int n)
       *(int *)block = n * NBLOCKS + blocknum;
       writeblock(block, blocknum); /* write the new value */
       printf("Wrote block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
-      printf("Cache: ");
+      printf("\tCache: ");
       int x;
       for (x = 0; x < CACHESIZE; x++) {
-        printf("[%d]=#%2d=%3d\t", x, cache[x].blocknum, *(int *)cache[x].block);
+        printf("[%d] = #%2d = %3d\t", x, cache[x].blocknum, *(int *)cache[x].block);
       }
       printf("\n");
     }
@@ -86,10 +86,10 @@ void tester(int n)
     else { /* if even, simulate a read */
       readblock(block, blocknum); 
       printf("Read  block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
-      printf("Cache: ");
+      printf("\tCache: ");
       int x;
       for (x = 0; x < CACHESIZE; x++) {
-        printf("[%d]=#%2d=%3d\t", x, cache[x].blocknum, *(int *)cache[x].block);
+        printf("[%d] = #%2d = %3d\t", x, cache[x].blocknum, *(int *)cache[x].block);
       }
       printf("\n");
     }
