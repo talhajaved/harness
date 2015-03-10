@@ -201,12 +201,13 @@ void readblock(char *block, int blocknum) {
     putToEnd(indexToReplace); // update the orderArray
     
     if (cache[indexToReplace].dirty) {
-      // we have to write back the contents of previously cached block
+      // we have to write to disk the contents of previously cached block
       dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
     }
     
-    dblockread(cache[indexToReplace].block, blocknum); // read blocknum
+    cache[indexToReplace].blocknum = blocknum; // rewrite blocknum
     cache[indexToReplace].dirty = false; // cacheBlock is clean now
+    dblockread(cache[indexToReplace].block, blocknum); // read from disk
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
     
@@ -259,7 +260,7 @@ void writeblock(char *block, int blocknum) {
     putToEnd(indexToReplace); // update the orderArray
     
     if (cache[indexToReplace].dirty) {
-      // we have to write back the contents of previously cached block
+      // we have to write to disk the contents of previously cached block
       dblockwrite(cache[indexToReplace].block, cache[indexToReplace].blocknum);
     }
     
