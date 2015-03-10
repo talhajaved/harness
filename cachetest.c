@@ -144,13 +144,12 @@ void dblockwrite(char *block, int blocknum) {
 /* Cache routines */
 
 // Reshuffles the orderArray
+// it is assumed that the caller locks the array first!!
 void putToEnd(int indexTemp) {
   // indexTemp is the index in orderArray that needs to be put to end of it
   // notice that indexTemp refers to *contents* of orderArray, not its indices
   
-  //printf("Put to back: %d\t", indexTemp);
-
-  smutex_lock(&orderMutex); // lock the orderArray
+  //smutex_lock(&orderMutex); // lock the orderArray
   int startPosition = 0; // from which place up do we reshuffle
 
   int i;
@@ -165,19 +164,13 @@ void putToEnd(int indexTemp) {
     orderArray[j] = orderArray[j+1]; // move things up
   }
   orderArray[CACHESIZE-1] = indexTemp; // put indexTemp at the end
-  
-  /*int k;
-  for (k = 0; k < CACHESIZE; k++) {
-    printf("Array[%d]: %d\t", k, orderArray[k]);
-  }
-  printf("\n");*/
 
-  smutex_unlock(&orderMutex); // unlock orderArray
+  //smutex_unlock(&orderMutex); // unlock orderArray
 }
 
 // Initializes the cache
 void cacheinit() {
-  smutex_init(&orderMutex); // lock orderArray
+  smutex_init(&orderMutex); // initialize orderArray lock
   
   int i;
   for (i = 0; i < CACHESIZE; i++ ) { // initialize all cacheBlocks
@@ -202,22 +195,17 @@ void readblock(char *block, int blocknum) {
   int indexToReplace = 0; // which index do we replace?
 
   int i;
+  smutex_lock(&orderMutex);
   for (i = 0; i < CACHESIZE; i++) {
     if (cache[i].blocknum == blocknum) {
-      smutex_lock(&cache[i].mutex); // locks the cacheBlock
-
       cacheFound = i; // record where we found the correct block
-      indexToReplace = cacheFound;
-      
       break;
     }
   }
 
   if (cacheFound == -1) { // if we did not find the block in cache
-    smutex_lock(&cache[orderArray[0]].mutex); // locks the current cacheBlock
     indexToReplace = orderArray[0]; // replacing cacheBlock[head of orderArray]
-
-    putToEnd(indexToReplace); // update the orderArray
+    smutex_lock(&cache[indexToReplace].mutex); // locks the current cacheBlock
     
     if (cache[indexToReplace].dirty) {
       // we have to write to disk the contents of previously cached block
@@ -229,41 +217,45 @@ void readblock(char *block, int blocknum) {
     dblockread(cache[indexToReplace].block, blocknum); // read from disk
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
+
+    smutex_unlock(&cache[indexToReplace].mutex); // unlocks current cacheBlock
+
+    putToEnd(indexToReplace); // updates the orderArray
+    smutex_unlock(&orderMutex); // unlocks orderArray
   }
 
-  else { // we found block in cache    
-    putToEnd(indexToReplace); // update the orderArray
+  else { // we found block in cache
+    indexToReplace = cacheFound;
+    smutex_lock(&cache[indexToReplace].mutex); // locks the cacheBlock
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
-  }
 
-  smutex_unlock(&cache[indexToReplace].mutex); // unlocks current cacheBlock
+    smutex_unlock(&cache[indexToReplace].mutex); // unlocks the cacheBlock
+
+    putToEnd(indexToReplace); // updates the orderArray
+    smutex_unlock(&orderMutex); // unlocks orderArray
+  }
 }
 
 void writeblock(char *block, int blocknum) {
   // block provided by tester
-  // blocknum is the number of the block to write
+  // blocknum is the number of the block to read
 
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?
 
   int i;
+  smutex_lock(&orderMutex);
   for (i = 0; i < CACHESIZE; i++) {
     if (cache[i].blocknum == blocknum) {
-      smutex_lock(&cache[i].mutex); // locks the cacheBlock
-
       cacheFound = i; // record where we found the correct block
-      indexToReplace = cacheFound;
-      
       break;
     }
   }
 
   if (cacheFound == -1) { // if we did not find the block in cache
-    smutex_lock(&cache[orderArray[0]].mutex); // locks the current cacheBlock
     indexToReplace = orderArray[0]; // replacing cacheBlock[head of orderArray]
-    
-    putToEnd(indexToReplace); // update the orderArray
+    smutex_lock(&cache[indexToReplace].mutex); // locks the current cacheBlock
     
     if (cache[indexToReplace].dirty) {
       // we have to write to disk the contents of previously cached block
@@ -272,16 +264,25 @@ void writeblock(char *block, int blocknum) {
     
     cache[indexToReplace].blocknum = blocknum; // rewrite blocknum
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
-    memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester    
+    memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
+    
+    smutex_unlock(&cache[indexToReplace].mutex); // unlock current cacheBlock
+
+    putToEnd(indexToReplace); // updates the orderArray
+    smutex_unlock(&orderMutex); // unlocks orderArray
   }
 
-  else { // we found block in cache    
-    putToEnd(indexToReplace); // update the orderArray
+  else { // we found block in cache
+    indexToReplace = cacheFound;
+    smutex_lock(&cache[indexToReplace].mutex); // locks the cacheBlock
     
     cache[indexToReplace].blocknum = blocknum; // replace cacheBlock's blocknum
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
-  }
 
-  smutex_unlock(&cache[indexToReplace].mutex); // unlock current cacheBlock
+    smutex_unlock(&cache[indexToReplace].mutex); // unlock the cacheBlock
+
+    putToEnd(indexToReplace); // updates the orderArray
+    smutex_unlock(&orderMutex); // unlocks orderArray
+  }
 }
