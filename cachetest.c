@@ -77,7 +77,7 @@ void tester(int n)
       printf("Wrote block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
       int x;
       for (x = 0; x < CACHESIZE; x++) {
-        printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+        printf("Cache[%2d]: %2d (%3d)\t", x, cache[x].blocknum, *(int *)cache[x].block);
       }
       printf("\n");
     }
@@ -87,7 +87,7 @@ void tester(int n)
       printf("Read  block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
       int x;
       for (x = 0; x < CACHESIZE; x++) {
-        printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+        printf("Cache[%2d]: %2d (%3d)\t", x, cache[x].blocknum, *(int *)cache[x].block);
       }
       printf("\n");
     }
