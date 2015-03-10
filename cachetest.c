@@ -151,16 +151,11 @@ void putToEnd(int indexTemp) {
   }
   orderArray[CACHESIZE-1] = indexTemp; // put indexTemp at the end
   
-  int x;
-  for (x = 0; x < CACHESIZE; x++) {
-    printf("Array[%d]: %d\t", x, orderArray[x]);
-  }
-
   int k;
   for (k = 0; k < CACHESIZE; k++) {
-    printf("Cache[%d]: %d\t", k, cache[k].blocknum);
+    printf("Array[%d]: %d\t", k, orderArray[k]);
   }
-  printf("\n");
+
   smutex_unlock(&orderMutex); // unlock orderArray
 }
 
@@ -214,6 +209,12 @@ void readblock(char *block, int blocknum) {
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
     
+    int x;
+    for (x = 0; x < CACHESIZE; x++) {
+      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+    }
+    printf("\n");
+    
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks current cacheBlock
   }
 
@@ -225,9 +226,14 @@ void readblock(char *block, int blocknum) {
     
     memcpy(block, cache[indexToReplace].block, BLOCKSIZE); // copy to tester
     
+    int x;
+    for (x = 0; x < CACHESIZE; x++) {
+      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+    }
+    printf("\n");
+
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks the cacheBlock
   }
-
 }
 
 void writeblock(char *block, int blocknum) {
@@ -260,6 +266,12 @@ void writeblock(char *block, int blocknum) {
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
     
+    int x;
+    for (x = 0; x < CACHESIZE; x++) {
+      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+    }
+    printf("\n");
+
     smutex_unlock(&cache[indexToReplace].mutex); // unlock current cacheBlock
   }
 
@@ -273,6 +285,12 @@ void writeblock(char *block, int blocknum) {
     cache[indexToReplace].dirty = true; // make cacheBlock dirty
     memcpy(cache[indexToReplace].block, block, BLOCKSIZE); // copy from tester
     
+    int x;
+    for (x = 0; x < CACHESIZE; x++) {
+      printf("Cache[%d]: %d\t", x, cache[x].blocknum);
+    }
+    printf("\n");
+
     smutex_unlock(&cache[indexToReplace].mutex); // unlock the cacheBlock
   }
 }
