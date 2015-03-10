@@ -75,23 +75,23 @@ void tester(int n)
       *(int *)block = n * NBLOCKS + blocknum;
       writeblock(block, blocknum); /* write the new value */
       printf("Wrote block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
-      printf("\tCache: ");
+      /*printf("\tCache: ");
       int x;
       for (x = 0; x < CACHESIZE; x++) {
         printf("[%d] = #%2d = %3d\t", orderArray[x], cache[orderArray[x]].blocknum, *(int *)cache[orderArray[x]].block);
       }
-      printf("\n");
+      printf("\n");*/
     }
 
     else { /* if even, simulate a read */
       readblock(block, blocknum); 
       printf("Read  block %2d in thread %d: %3d\n", blocknum, n, *(int *)block);
-      printf("\tCache: ");
+      /*printf("\tCache: ");
       int x;
       for (x = 0; x < CACHESIZE; x++) {
         printf("[%d] = #%2d = %3d\t", orderArray[x], cache[orderArray[x]].blocknum, *(int *)cache[orderArray[x]].block);
       }
-      printf("\n");
+      printf("\n");*/
     }
   }
   sthread_exit(100 + n);
