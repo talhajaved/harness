@@ -155,6 +155,7 @@ void putToEnd(int indexTemp) {
   for (k = 0; k < CACHESIZE; k++) {
     printf("Array[%d]: %d\t", k, orderArray[k]);
   }
+  printf("\n");
 
   smutex_unlock(&orderMutex); // unlock orderArray
 }
@@ -214,7 +215,7 @@ void readblock(char *block, int blocknum) {
       printf("Cache[%d]: %d\t", x, cache[x].blocknum);
     }
     printf("\n");
-    
+
     smutex_unlock(&cache[indexToReplace].mutex); // unlocks current cacheBlock
   }
 
