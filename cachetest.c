@@ -51,7 +51,7 @@ static int orderCount;
 // if orderArray is not accessed by anyone, orderCount == 0
 // if orderArray is accessed by threads, orderCount > 0
 static scond_t orderCountZero; // signals that orderCount is 0
-static scond_t orderCountNonnegative // signals that orderCount is >= 0
+static scond_t orderCountNonnegative; // signals that orderCount is >= 0
 static smutex_t orderCountMutex;
 
 //static smutex_t orderArrayMutex;
