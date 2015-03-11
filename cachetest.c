@@ -222,6 +222,7 @@ void readblock(char *block, int blocknum) {
   while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
     if (orderCount < 0) {
+      smutex_unlock(&orderCountMutex);
       continue;
     }
     else {
@@ -281,6 +282,7 @@ void readblock(char *block, int blocknum) {
   while (orderCount != 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
     if (orderCount != 0) {
+      smutex_unlock(&orderCountMutex);
       continue;
     }
     else {
@@ -326,6 +328,7 @@ void writeblock(char *block, int blocknum) {
   while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
     if (orderCount < 0) {
+      smutex_unlock(&orderCountMutex);
       continue;
     }
     else {
@@ -385,6 +388,7 @@ void writeblock(char *block, int blocknum) {
   while (orderCount != 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
     if (orderCount != 0) {
+      smutex_unlock(&orderCountMutex);
       continue;
     }
     else {
