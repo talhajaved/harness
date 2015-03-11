@@ -51,6 +51,7 @@ static int orderCount;
 // if orderArray is not accessed by anyone, orderCount == 0
 // if orderArray is accessed by threads, orderCount > 0
 static scond_t orderCountZero; // signals that orderCount is 0
+static scond_t orderCountNonnegative // signals that orderCount is >= 0
 static smutex_t orderCountMutex;
 
 //static smutex_t orderArrayMutex;
@@ -151,7 +152,7 @@ void dblockwrite(char *block, int blocknum) {
 /* Cache routines */
 
 // Reshuffles the orderArray
-// orderArray must be protected during reshuffling! - outside of function
+// orderArray must be protected during reshuffling! - not provided in function
 void putToEnd(int indexTemp) {
   // indexTemp is the index in orderArray that needs to be put to end of it
   // notice that indexTemp refers to *contents* of orderArray, not its indices
@@ -174,10 +175,11 @@ void putToEnd(int indexTemp) {
 // Initializes the cache
 void cacheinit() {
   scond_init(&orderCountZero);
+  scond_init(&orderCountNonnegative);
   smutex_init(&orderCountMutex);
 
   int i;
-  orderCount = 0;
+  orderCount = 0; // make sure orderCount is initialized
 
   for (i = 0; i < CACHESIZE; i++ ) { // initialize all cacheBlocks
     smutex_init(&cache[i].mutex);
@@ -200,15 +202,20 @@ void readblock(char *block, int blocknum) {
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?  
 
+  // redundant, rebroadcast (to make sure the threads start)
   smutex_lock(&orderCountMutex);
   if (orderCount == 0) {
     scond_broadcast(&orderCountZero, &orderCountMutex);
   }
+  if (orderCount >= 0) {
+    scond_broadcast(&orderCountNonnegative, &orderCountMutex);
+  }
   smutex_unlock(&orderCountMutex);
 
+  // threads have to wait if orderCount is -1
   smutex_lock(&orderCountMutex);
-  while (orderCount == 0) {
-    scond_wait(&orderCountZero, &orderCountMutex);
+  while (orderCount >= 0) {
+    scond_wait(&orderCountNonnegative, &orderCountMutex);
     orderCount += 1;
   }
   smutex_unlock(&orderCountMutex);
@@ -252,6 +259,9 @@ void readblock(char *block, int blocknum) {
   if (orderCount == 0) {
     scond_broadcast(&orderCountZero, &orderCountMutex);
   }
+  if (orderCount >= 0) {
+    scond_broadcast(&orderCountNonnegative, &orderCountMutex);
+  }
   smutex_unlock(&orderCountMutex);
 
   smutex_lock(&orderCountMutex);
@@ -277,15 +287,20 @@ void writeblock(char *block, int blocknum) {
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?  
 
+  // redundant, rebroadcast (to make sure the threads start)
   smutex_lock(&orderCountMutex);
   if (orderCount == 0) {
     scond_broadcast(&orderCountZero, &orderCountMutex);
   }
+  if (orderCount >= 0) {
+    scond_broadcast(&orderCountNonnegative, &orderCountMutex);
+  }
   smutex_unlock(&orderCountMutex);
 
+  // threads have to wait if orderCount is -1
   smutex_lock(&orderCountMutex);
-  while (orderCount == 0) {
-    scond_wait(&orderCountZero, &orderCountMutex);
+  while (orderCount >= 0) {
+    scond_wait(&orderCountNonnegative, &orderCountMutex);
     orderCount += 1;
   }
   smutex_unlock(&orderCountMutex);
@@ -328,6 +343,9 @@ void writeblock(char *block, int blocknum) {
   orderCount -= 1;
   if (orderCount == 0) {
     scond_broadcast(&orderCountZero, &orderCountMutex);
+  }
+  if (orderCount >= 0) {
+    scond_broadcast(&orderCountNonnegative, &orderCountMutex);
   }
   smutex_unlock(&orderCountMutex);
 
