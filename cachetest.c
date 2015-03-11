@@ -221,15 +221,9 @@ void readblock(char *block, int blocknum) {
   smutex_lock(&orderCountMutex);
   while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
-    if (orderCount < 0) {
-      smutex_unlock(&orderCountMutex);
-      continue;
-    }
-    else {
-      printf("Print 5\n");
-      orderCount += 1;
-    }
   }
+  printf("Print 5\n");
+  orderCount += 1;
   smutex_unlock(&orderCountMutex);
 
   for (i = 0; i < CACHESIZE; i++) {
@@ -281,14 +275,8 @@ void readblock(char *block, int blocknum) {
   smutex_lock(&orderCountMutex);
   while (orderCount != 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
-    if (orderCount != 0) {
-      smutex_unlock(&orderCountMutex);
-      continue;
-    }
-    else {
-      orderCount -= 1;
-    }
   }
+  orderCount -= 1;
   smutex_unlock(&orderCountMutex);
 
   putToEnd(indexToReplace); // updates the orderArray
@@ -327,15 +315,9 @@ void writeblock(char *block, int blocknum) {
   smutex_lock(&orderCountMutex);
   while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
-    if (orderCount < 0) {
-      smutex_unlock(&orderCountMutex);
-      continue;
-    }
-    else {
-      printf("Print 5\n");
-      orderCount += 1;
-    }
   }
+  printf("Print 5\n");
+  orderCount += 1;
   smutex_unlock(&orderCountMutex);
 
   for (i = 0; i < CACHESIZE; i++) {
@@ -387,14 +369,8 @@ void writeblock(char *block, int blocknum) {
   smutex_lock(&orderCountMutex);
   while (orderCount != 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
-    if (orderCount != 0) {
-      smutex_unlock(&orderCountMutex);
-      continue;
-    }
-    else {
-      orderCount -= 1;
-    }
   }
+  orderCount -= 1;
   smutex_unlock(&orderCountMutex);
 
   putToEnd(indexToReplace); // updates the orderArray
