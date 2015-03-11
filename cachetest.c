@@ -219,10 +219,15 @@ void readblock(char *block, int blocknum) {
   printf("Print 4\n");
   // threads have to wait if orderCount is -1
   smutex_lock(&orderCountMutex);
-  while (orderCount >= 0) {
+  while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
-    printf("Print 5\n");
-    orderCount += 1;
+    if (orderCount < 0) {
+      continue;
+    }
+    else {
+      printf("Print 5\n");
+      orderCount += 1;
+    }
   }
   smutex_unlock(&orderCountMutex);
 
@@ -273,9 +278,14 @@ void readblock(char *block, int blocknum) {
   smutex_unlock(&orderCountMutex);
 
   smutex_lock(&orderCountMutex);
-  while (orderCount == 0) {
+  while (orderCount != 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
-    orderCount -= 1;
+    if (orderCount != 0) {
+      continue;
+    }
+    else {
+      orderCount -= 1;
+    }
   }
   smutex_unlock(&orderCountMutex);
 
@@ -313,10 +323,15 @@ void writeblock(char *block, int blocknum) {
   printf("Print 4\n");
   // threads have to wait if orderCount is -1
   smutex_lock(&orderCountMutex);
-  while (orderCount >= 0) {
+  while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
-    printf("Print 5\n");
-    orderCount += 1;
+    if (orderCount < 0) {
+      continue;
+    }
+    else {
+      printf("Print 5\n");
+      orderCount += 1;
+    }
   }
   smutex_unlock(&orderCountMutex);
 
@@ -367,9 +382,14 @@ void writeblock(char *block, int blocknum) {
   smutex_unlock(&orderCountMutex);
 
   smutex_lock(&orderCountMutex);
-  while (orderCount == 0) {
+  while (orderCount != 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
-    orderCount -= 1;
+    if (orderCount != 0) {
+      continue;
+    }
+    else {
+      orderCount -= 1;
+    }
   }
   smutex_unlock(&orderCountMutex);
 
