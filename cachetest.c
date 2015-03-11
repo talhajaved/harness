@@ -201,6 +201,12 @@ void readblock(char *block, int blocknum) {
   int indexToReplace = 0; // which index do we replace?  
 
   smutex_lock(&orderCountMutex);
+  if (orderCount == 0) {
+    scond_broadcast(&orderCountZero, &orderCountMutex);
+  }
+  smutex_unlock(&orderCountMutex);
+
+  smutex_lock(&orderCountMutex);
   while (orderCount == 0) {
     scond_wait(&orderCountZero, &orderCountMutex);
     orderCount += 1;
@@ -270,6 +276,12 @@ void writeblock(char *block, int blocknum) {
   int i;
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?  
+
+  smutex_lock(&orderCountMutex);
+  if (orderCount == 0) {
+    scond_broadcast(&orderCountZero, &orderCountMutex);
+  }
+  smutex_unlock(&orderCountMutex);
 
   smutex_lock(&orderCountMutex);
   while (orderCount == 0) {
