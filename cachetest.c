@@ -202,27 +202,21 @@ void readblock(char *block, int blocknum) {
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?  
 
-  printf("Print 1\n");
-
   // redundant, rebroadcast (to make sure the threads start)
   smutex_lock(&orderCountMutex);
   if (orderCount == 0) {
-    printf("Print 2\n");
     scond_broadcast(&orderCountZero, &orderCountMutex);
   }
   if (orderCount >= 0) {
-    printf("Print 3\n");
     scond_broadcast(&orderCountNonnegative, &orderCountMutex);
   }
   smutex_unlock(&orderCountMutex);
 
-  printf("Print 4\n");
   // threads have to wait if orderCount is -1
   smutex_lock(&orderCountMutex);
   while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
   }
-  printf("Print 5\n");
   orderCount += 1;
   smutex_unlock(&orderCountMutex);
 
@@ -232,8 +226,6 @@ void readblock(char *block, int blocknum) {
       break;
     }
   }
-
-  printf("Print 6\n");
 
   if (cacheFound == -1) { // if we did not find the block in cache
     indexToReplace = orderArray[0]; // replacing cacheBlock[head of orderArray]
@@ -296,27 +288,21 @@ void writeblock(char *block, int blocknum) {
   int cacheFound = -1; // where is the block with correct blocknum in cache
   int indexToReplace = 0; // which index do we replace?  
 
-  printf("Print 1\n");
-
   // redundant, rebroadcast (to make sure the threads start)
   smutex_lock(&orderCountMutex);
   if (orderCount == 0) {
-    printf("Print 2\n");
     scond_broadcast(&orderCountZero, &orderCountMutex);
   }
   if (orderCount >= 0) {
-    printf("Print 3\n");
     scond_broadcast(&orderCountNonnegative, &orderCountMutex);
   }
   smutex_unlock(&orderCountMutex);
 
-  printf("Print 4\n");
   // threads have to wait if orderCount is -1
   smutex_lock(&orderCountMutex);
   while (orderCount < 0) {
     scond_wait(&orderCountNonnegative, &orderCountMutex);
   }
-  printf("Print 5\n");
   orderCount += 1;
   smutex_unlock(&orderCountMutex);
 
@@ -326,8 +312,6 @@ void writeblock(char *block, int blocknum) {
       break;
     }
   }
-
-  printf("Print 6\n");
 
   if (cacheFound == -1) { // if we did not find the block in cache
     indexToReplace = orderArray[0]; // replacing cacheBlock[head of orderArray]
