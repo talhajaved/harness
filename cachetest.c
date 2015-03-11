@@ -176,9 +176,8 @@ void cacheinit() {
   scond_init(&orderCountZero);
   smutex_init(&orderCountMutex);
 
-  //smutex_init(&orderArrayMutex); // initialize orderArray lock
-
   int i;
+  orderCount = 0;
 
   for (i = 0; i < CACHESIZE; i++ ) { // initialize all cacheBlocks
     smutex_init(&cache[i].mutex);
