@@ -173,7 +173,7 @@ void putToEnd(int indexTemp) {
 
 // Initializes the cache
 void cacheinit() {
-  scond_init(&orderArrayZero);
+  scond_init(&orderCountZero);
   smutex_init(&orderCountMutex);
 
   //smutex_init(&orderArrayMutex); // initialize orderArray lock
